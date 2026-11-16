@@ -1,0 +1,519 @@
+{
+  "info": {
+    "name": "Routag Delivery & Wallet API Test Suite",
+    "description": "Automated API test collection covering the end-to-end delivery lifecycle, fee calculations, courier actions, and wallet escrow/settlement assertions for the Routag QA Sandbox.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "01. Auth - Business Login",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200 OK', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('Returns valid token and business role', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.token).to.be.a('string');",
+              "    pm.expect(jsonData.user.role).to.eql('business');",
+              "    pm.environment.set('bizToken', jsonData.token);",
+              "    pm.environment.set('bizId', jsonData.user.id);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{businessEmail}}\",\n  \"password\": \"{{businessPassword}}\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/auth/login",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "auth",
+            "login"
+          ]
+        }
+      }
+    },
+    {
+      "name": "02. Auth - Courier Login",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200 OK', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('Returns valid token and courier role', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.token).to.be.a('string');",
+              "    pm.expect(jsonData.user.role).to.eql('courier');",
+              "    pm.environment.set('courierToken', jsonData.token);",
+              "    pm.environment.set('courierId', jsonData.user.id);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{courierEmail}}\",\n  \"password\": \"{{courierPassword}}\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/auth/login",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "auth",
+            "login"
+          ]
+        }
+      }
+    },
+    {
+      "name": "03. Wallet - Check Initial Business Balance",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200 OK', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('Wallet response contains balance and currency', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.balance).to.be.a('number');",
+              "    pm.expect(jsonData.currency).to.eql('NGN');",
+              "    pm.expect(jsonData.held).to.be.a('number');",
+              "    pm.environment.set('initialBizBalance', jsonData.balance);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{bizToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/wallet",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "wallet"
+          ]
+        }
+      }
+    },
+    {
+      "name": "04. Deliveries - Request Delivery Quote",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 201 Created', function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "pm.test('Fee correctly calculated using formula (1500 + 200 * weight)', function () {",
+              "    var jsonData = pm.response.json();",
+              "    var expectedFee = 1500 + 200 * 2.0;",
+              "    pm.expect(jsonData.fee).to.eql(expectedFee);",
+              "    pm.expect(jsonData.currency).to.eql('NGN');",
+              "    pm.expect(jsonData.quote_id).to.be.a('string');",
+              "    pm.environment.set('quoteId', jsonData.quote_id);",
+              "    pm.environment.set('deliveryFee', jsonData.fee);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{bizToken}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"pickup\": {\n    \"name\": \"Ade Stores\",\n    \"phone\": \"08012345678\",\n    \"address\": \"12 Marina Road, Lagos Island\"\n  },\n  \"dropoff\": {\n    \"name\": \"Babajide Delivery\",\n    \"phone\": \"08098765432\",\n    \"address\": \"45 Admiralty Way, Lekki Phase 1\"\n  },\n  \"package\": {\n    \"description\": \"High-grade Gadgets\",\n    \"weight_kg\": 2\n  }\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/deliveries/quote",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "deliveries",
+            "quote"
+          ]
+        }
+      }
+    },
+    {
+      "name": "05. Deliveries - Create Delivery with Quote",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 201 Created', function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "pm.test('Delivery initial status is draft and fee matches quote', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.status).to.eql('draft');",
+              "    pm.expect(jsonData.fee).to.eql(Number(pm.environment.get('deliveryFee')));",
+              "    pm.expect(jsonData.id).to.be.a('string');",
+              "    pm.environment.set('deliveryId', jsonData.id);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{bizToken}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"quote_id\": \"{{quoteId}}\",\n  \"pickup\": {\n    \"name\": \"Ade Stores\",\n    \"phone\": \"08012345678\",\n    \"address\": \"12 Marina Road, Lagos Island\"\n  },\n  \"dropoff\": {\n    \"name\": \"Babajide Delivery\",\n    \"phone\": \"08098765432\",\n    \"address\": \"45 Admiralty Way, Lekki Phase 1\"\n  },\n  \"package\": {\n    \"description\": \"High-grade Gadgets\",\n    \"weight_kg\": 2\n  }\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/deliveries",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "deliveries"
+          ]
+        }
+      }
+    },
+    {
+      "name": "06. Deliveries - Publish Delivery",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200 OK', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('Delivery status transitioned to pending', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.status).to.eql('pending');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{bizToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/deliveries/{{deliveryId}}/publish",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "deliveries",
+            "{{deliveryId}}",
+            "publish"
+          ]
+        }
+      }
+    },
+    {
+      "name": "07. Courier - Accept Delivery",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200 OK', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('Delivery status is assigned to courier', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.status).to.eql('assigned');",
+              "    pm.expect(jsonData.courier_id).to.eql(pm.environment.get('courierId'));",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{courierToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/courier/deliveries/{{deliveryId}}/accept",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "courier",
+            "deliveries",
+            "{{deliveryId}}",
+            "accept"
+          ]
+        }
+      }
+    },
+    {
+      "name": "08. Wallet - Verify Balance Held after Acceptance",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200 OK', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('Wallet balance decreased by fee and held amount increased', function () {",
+              "    var jsonData = pm.response.json();",
+              "    var fee = Number(pm.environment.get('deliveryFee'));",
+              "    var initial = Number(pm.environment.get('initialBizBalance'));",
+              "    pm.expect(jsonData.balance).to.eql(initial - fee);",
+              "    pm.expect(jsonData.held).to.eql(fee);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{bizToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/wallet",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "wallet"
+          ]
+        }
+      }
+    },
+    {
+      "name": "09. Deliveries - Get Security Code",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200 OK', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('Returns valid 4-digit security code', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.code).to.match(/^\\d{4}$/);",
+              "    pm.environment.set('deliveryCode', jsonData.code);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{bizToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/deliveries/{{deliveryId}}/code",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "deliveries",
+            "{{deliveryId}}",
+            "code"
+          ]
+        }
+      }
+    },
+    {
+      "name": "10. Courier - Deliver Package with Security Code",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200 OK', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('Delivery status transitions to delivered', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.status).to.eql('delivered');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{courierToken}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"code\": \"{{deliveryCode}}\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/courier/deliveries/{{deliveryId}}/deliver",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "courier",
+            "deliveries",
+            "{{deliveryId}}",
+            "deliver"
+          ]
+        }
+      }
+    },
+    {
+      "name": "11. Wallet - Verify Final Settlement",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200 OK', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('Held funds are released (0) and balance reflects debited fee', function () {",
+              "    var jsonData = pm.response.json();",
+              "    var fee = Number(pm.environment.get('deliveryFee'));",
+              "    var initial = Number(pm.environment.get('initialBizBalance'));",
+              "    pm.expect(jsonData.held).to.eql(0);",
+              "    pm.expect(jsonData.balance).to.eql(initial - fee);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{bizToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/wallet",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "wallet"
+          ]
+        }
+      }
+    }
+  ]
+}

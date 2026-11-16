@@ -1,0 +1,17 @@
+{
+  "name": "routag-ui-automation",
+  "version": "1.0.0",
+  "description": "Playwright UI automation suite for Routag delivery dashboard",
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:ui": "playwright test --ui",
+    "report": "playwright show-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.49.1",
+    "@types/node": "^22.10.1",
+    "dotenv": "^16.4.7",
+    "typescript": "^5.7.2"
+  }
+}
