@@ -10,7 +10,7 @@ When time is compressed, I apply **Risk-Based Testing (RBT)** focused on busines
 4. **Defect Verification**: Verify fixes for high-severity defects resolved in this sprint.
 5. **Triage & Explicit Trade-offs**: Deprioritize cosmetic UI issues, edge-case form validations, and low-traffic journeys, explicitly communicating residual risks to stakeholders to make an informed go/no-go decision.
 
-*(139 words)*
+
 
 ---
 
@@ -23,7 +23,7 @@ Preventing duplicate debits requires validating idempotency, concurrency, and le
 3. **State Machine Transitions**: Test terminal states—ensure re-calling `/deliver` or `/cancel` cannot re-trigger debits or payouts.
 4. **Double-Entry Reconciliation**: Audit wallet ledgers: assert that `initial_balance - sum(charges) + sum(refunds) == current_balance`, and that each delivery reference maps to at most one `hold` and one `charge` transaction.
 
-*(134 words)*
+
 
 ---
 
@@ -39,4 +39,4 @@ I implement a tiered, shift-left testing strategy within GitHub Actions / GitLab
 4. **Reporting & Quality Gates**: Publish HTML test reports and JUnit XML artifacts. Deploy to production only if 100% of critical paths pass.
 5. **Post-Deploy Smoke**: Run synthetic health checks in production.
 
-*(144 words)*
+
