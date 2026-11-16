@@ -10,8 +10,6 @@ When time is compressed, I apply **Risk-Based Testing (RBT)** focused on busines
 4. **Defect Verification**: Verify fixes for high-severity defects resolved in this sprint.
 5. **Triage & Explicit Trade-offs**: Deprioritize cosmetic UI issues, edge-case form validations, and low-traffic journeys, explicitly communicating residual risks to stakeholders to make an informed go/no-go decision.
 
-
-
 ---
 
 ### 2. How would you test the wallet so a business is never debited twice for one delivery?
@@ -22,8 +20,6 @@ Preventing duplicate debits requires validating idempotency, concurrency, and le
 2. **Concurrency & Race Condition Testing**: Execute parallel requests simultaneously (e.g., using `Promise.all` or k6) for courier acceptance and completion against a single delivery. Verify database locks/transactions prevent race conditions and double holds.
 3. **State Machine Transitions**: Test terminal states—ensure re-calling `/deliver` or `/cancel` cannot re-trigger debits or payouts.
 4. **Double-Entry Reconciliation**: Audit wallet ledgers: assert that `initial_balance - sum(charges) + sum(refunds) == current_balance`, and that each delivery reference maps to at most one `hold` and one `charge` transaction.
-
-
 
 ---
 
@@ -38,5 +34,3 @@ I implement a tiered, shift-left testing strategy within GitHub Actions / GitLab
    - **Headless UI Tests (Playwright)**: Run critical E2E user journeys across Chromium/Firefox in parallel, capturing screenshots/traces on failure.
 4. **Reporting & Quality Gates**: Publish HTML test reports and JUnit XML artifacts. Deploy to production only if 100% of critical paths pass.
 5. **Post-Deploy Smoke**: Run synthetic health checks in production.
-
-
